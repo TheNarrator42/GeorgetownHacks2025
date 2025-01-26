@@ -1,5 +1,6 @@
-#assuming quine string location is marked with QUINE_STRING
-#and print location is marked with QUINE_PRINTF_ARGS
+# assuming quine string location is marked with QUINE_STRING
+# and print location is marked with QUINE_PRINTF_ARGS
+# processes C file into a quine such that it is able to produce its own source code
 
 from sys import argv
 
@@ -18,11 +19,13 @@ while index < len(content):
     char = content[index]
     print(repr(char))
     #found a \, determine if its a new line indicator
-    if(char == '\n'): 
-        PreQuineEsc.append("10")
+    if(char == '%'):
+        preQuineString += "%%"
+    elif(char == '\n'):
+        #PreQuineEsc.append("10")
         print(PreQuineEsc)
-        preQuineString += "%"
-        preQuineString += "c"
+        #preQuineString += "%"
+        #preQuineString += "c"
     elif(char == '\"'): #we need to exactly print out a quotatoin
         PreQuineEsc.append("34")
         print(PreQuineEsc)

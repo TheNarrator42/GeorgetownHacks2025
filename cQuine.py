@@ -1,7 +1,12 @@
-#assuming quine string location is marked with char*quineString=""; 
-#and print location is marked with printf("quine");
+#assuming quine string location is marked with QUINE_STRING
+#and print location is marked with QUINE_PRINTF_ARGS
 
-program = input("enter .c file without extension: ")
+from sys import argv
+
+if len(argv) == 2:
+  program = argv[1]
+else:
+  program = input("enter .c file without extension: ")
 preQuineString = ""
 print(program+".c")
 index = 0
@@ -32,13 +37,11 @@ while index < len(content):
         preQuineString += char
     index += 1
 
-
+PreQuineEsc.insert(preQuineString[0:preQuineString.find("QUINE_STRING")].count("%c"),"34")
+PreQuineEsc.insert(preQuineString[0:preQuineString.find("QUINE_STRING")].count("%c"),"34")
+breakPoint = preQuineString.find("QUINE_STRING")
 #properly insert itself
-preQuineString = preQuineString.replace("char*quineString=QUINE_STRING", "char*quineString=%c%s%c")
-
-PreQuineEsc.insert(preQuineString[0:preQuineString.find("%s")].count("%c")-1,"34")
-PreQuineEsc.insert(preQuineString[0:preQuineString.find("%s")].count("%c"),"34")
-breakPoint = preQuineString.find("char*quineString=%c%s%c")
+preQuineString = preQuineString.replace("QUINE_STRING", "%c%s%c")
 PreQuineEsc.insert(preQuineString[0:breakPoint].count("%c")+1,"quineString")
 
 newPrint = "quineString"
@@ -46,7 +49,7 @@ newPrint = "quineString"
 for s in PreQuineEsc:
     newPrint += "," + s
 
-preQuineString = preQuineString.replace("printf(QUINE_PRINTF_ARGS);", newPrint)
+preQuineString = preQuineString.replace("QUINE_PRINTF_ARGS", newPrint)
 
 print("helper quine string")
 print("char*quineString=\"" + preQuineString + "\";")
@@ -55,7 +58,8 @@ print(newPrint)
 
 content = open(program+".c", "r").read()
 
-content = content.replace("QUINE_STRING", "\"preQuineString\"")
+content = content.replace("QUINE_STRING", "\""+preQuineString+"\"")
 content = content.replace("QUINE_PRINTF_ARGS", newPrint)
 
-writer = open(program+".c", "w").write(content)
+writer = open(program+"quine"+".c", "w").write(content)
+

